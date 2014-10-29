@@ -795,51 +795,6 @@ public class Exercises {
 
     
     /**
-     * From the words in the text file, create nested maps, where the outer map is a
-     * map from the first letter of the word to an inner map. (Use a string of length
-     * one as the key.) The inner map, in turn, is a mapping from the length of the
-     * word to a list of words with that length. Don't bother with any lowercasing
-     * or uniquifying of the words.
-     *
-     * For example, given the words "foo bar baz bazz foo" the string
-     * representation of the result would be:
-     *     {b={3=[bar, baz], 4=[bazz]}, f={3=[foo, foo]}}
-     * 
-     * @throws IOException
-     */
-    @Test
-    public void ex24_nestedMaps() throws IOException {
-        //UNCOMMENT//Map<String, Map<Integer, List<String>>> result = null; // TODO
-        //BEGINREMOVE
-        Map<String, Map<Integer, List<String>>> result =
-            reader.lines()
-                  .flatMap(line -> Stream.of(line.split(REGEXP)))
-                  .collect(groupingBy(word -> word.substring(0,1),
-                                      groupingBy(String::length)));
-        //ENDREMOVE
-        
-        assertEquals("[abundance]", result.get("a").get(9).toString());
-        assertEquals("[by, be, by]", result.get("b").get(2).toString());
-        assertEquals("[flame, fresh]", result.get("f").get(5).toString());
-        assertEquals("[gaudy, grave]", result.get("g").get(5).toString());
-        assertEquals("[should, spring]", result.get("s").get(6).toString());
-        assertEquals("[substantial]", result.get("s").get(11).toString());
-        assertEquals("[the, thy, thy, thy, too, the, the, thy, the, the, the]",
-            result.get("t").get(3).toString());
-        assertEquals("[where, waste, world]", result.get("w").get(5).toString());
-    }
-    // Hint 1:
-    // <editor-fold defaultstate="collapsed">
-    // The nested map structure that's the desired is the result of applying
-    // a "downstream" collector that's the same operation as the first-level collector.
-    // </editor-fold>
-    // Hint 2:
-    // <editor-fold defaultstate="collapsed">
-    // Both collection operations are Collectors.groupingBy().
-    // </editor-fold>
-
-    
-    /**
      * Given a stream of strings, accumulate (collect) them into the result string
      * by inserting the input string at both the beginning and end. For example, given
      * input strings "x" and "y" the result should be "yxxy". Note: the input stream
@@ -847,7 +802,7 @@ public class Exercises {
      * correct result.
      */
     @Test
-    public void ex25_insertBeginningAndEnd() {
+    public void ex24_insertBeginningAndEnd() {
         Stream<String> input = Arrays.asList(
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
             "k", "l", "m", "n", "o", "p", "q", "r", "s", "t")
@@ -878,146 +833,6 @@ public class Exercises {
     // The second argument to the combiner function happens AFTER the first
     // argument in encounter order, so the second argument needs to be split
     // in half and prepended/appended to the first argument.
-    // </editor-fold>
-
-    
-// ========================================================
-// ADVANCED STREAMS: POTPOURRI
-// ========================================================
-
-    
-    /**
-     * Denormalize this map. The input is a map whose keys are the number of legs of an animal
-     * and whose values are lists of names of animals. Run through the map and generate a
-     * "denormalized" list of Animal objects using the provided Animal class, where 
-     * each Animal instance contains the name of the animal and the number of legs.
-     */
-    @Test
-    public void ex26_denormalizeMap() {
-        Map<Integer, List<String>> input = new HashMap<>();
-        input.put(4, Arrays.asList("ibex", "hedgehog", "wombat"));
-        input.put(6, Arrays.asList("ant", "beetle", "cricket"));
-        input.put(8, Arrays.asList("octopus", "spider", "squid"));
-        input.put(10, Arrays.asList("crab", "lobster", "scorpion"));
-        input.put(750, Arrays.asList("millipede"));
-        
-        class Animal {
-            final String name; final int legs;
-            Animal(String s, int i) { name = s; this.legs = i; }
-            @Override public boolean equals(Object obj) {
-                if (! (obj instanceof Animal)) return false;
-                Animal other = (Animal)obj;
-                return this.name.equals(other.name) && this.legs == other.legs;
-            }
-            @Override public int hashCode() { return name.hashCode() ^ legs; }
-            @Override public String toString() { return String.format("(%s,%d)", name, legs); }
-        }
-        
-        //UNCOMMENT//List<Animal> result = null; // TODO
-        //BEGINREMOVE
-        
-//        List<Animal> result =
-//            input.keySet().stream()
-//                .flatMap(legs -> input.get(legs).stream()
-//                                     .map(name -> new Animal(name, legs)))
-//                .collect(toList());
-        
-        // Alternative solution: stream over map entries instead of map keys
-
-        //List<Animal> result =
-        //    input.entrySet().stream()
-        //        .flatMap(entry -> entry.getValue().stream()
-        //                              .map(name -> new Animal(name, entry.getKey())))
-        //        .collect(toList());
-        
-        List<Animal> result = new ArrayList<>();
-        input.forEach((legs, names) ->
-                          names.forEach(name -> result.add(new Animal(name, legs))));
-        //ENDREMOVE
-        
-        assertEquals(13, result.size());
-        assertTrue(result.contains(new Animal("ibex", 4)));
-        assertTrue(result.contains(new Animal("hedgehog", 4)));
-        assertTrue(result.contains(new Animal("wombat", 4)));
-        assertTrue(result.contains(new Animal("ant", 6)));
-        assertTrue(result.contains(new Animal("beetle", 6)));
-        assertTrue(result.contains(new Animal("cricket", 6)));
-        assertTrue(result.contains(new Animal("octopus", 8)));
-        assertTrue(result.contains(new Animal("spider", 8)));
-        assertTrue(result.contains(new Animal("squid", 8)));
-        assertTrue(result.contains(new Animal("crab", 10)));
-        assertTrue(result.contains(new Animal("lobster", 10)));
-        assertTrue(result.contains(new Animal("scorpion", 10)));
-        assertTrue(result.contains(new Animal("millipede", 750)));
-    }
-    // Hint 1:
-    // <editor-fold defaultstate="collapsed">
-    // There are several ways to approach this. You could use a stream of map keys,
-    // a stream of map entries, or nested forEach() methods.
-    // </editor-fold>
-    // Hint 2:
-    // <editor-fold defaultstate="collapsed">
-    // If you use streams, consider using Stream.flatMap().
-    // </editor-fold>
-    
-    
-    /**
-     * Provide lambda expressions for the peek() operations that enable you to detect
-     * whether the stream is running in parallel, and using this information, provide
-     * expressions for the stream1isParallel and stream2isParallel booleans to make
-     * the assertions correct. You may also provide additional declarations
-     * and statements anywhere before assertions. (There are an open-ended number of
-     * solutions for this; the solutions file contains only one example.) Race conditions
-     * will be tolerated if you're clever.
-     */
-    @Test
-    public void ex27_parallelVsSequential() {
-        //UNCOMMENT//IntConsumer ic1 = i -> { }; // TODO
-        //UNCOMMENT//IntConsumer ic2 = i -> { }; // TODO
-        //BEGINREMOVE
-        LongAccumulator adder1 = new LongAccumulator((x, y) -> (x << 1) + y, 0L);
-        LongAccumulator adder2 = new LongAccumulator((x, y) -> (x << 1) + y, 0L);
-        IntConsumer ic1 = i -> adder1.accumulate(i);
-        IntConsumer ic2 = i -> adder2.accumulate(i);
-        //ENDREMOVE
-        
-        List<Integer> result1 = IntStream.range(0, 100)
-                                         .peek(ic1)
-                                         .boxed()
-                                         .collect(Collectors.toList());
-        
-        List<Integer> result2 = IntStream.range(0, 100)
-                                         .parallel()
-                                         .peek(ic2)
-                                         .boxed()
-                                         .collect(Collectors.toList());
-        
-        //UNCOMMENT//boolean stream1isParallel = false; // TODO
-        //UNCOMMENT//boolean stream2isParallel = false; // TODO
-        //BEGINREMOVE
-        boolean stream1isParallel = adder1.longValue() != -101L;
-        boolean stream2isParallel = adder2.longValue() != -101L;
-        //ENDREMOVE
-        
-        assertEquals(result1, result2);
-        assertFalse(stream1isParallel);
-        assertTrue(stream2isParallel);
-    }
-    // Hint 1:
-    // <editor-fold defaultstate="collapsed">
-    // By its very nature, you need to do something with side-effects within Stream.peek().
-    // </editor-fold>
-    // Hint 2:
-    // <editor-fold defaultstate="collapsed">
-    // The sequential and parallel streams have the same contents, but they will
-    // probably end up processing the elements in a different order, even though
-    // the output list is collected in the proper order (encounter order).
-    // </editor-fold>
-    // Hint 3:
-    // <editor-fold defaultstate="collapsed">
-    // Consider a thread-safe side-effect-supporting structure such as LongAdder.
-    // Note that LongAdder's accumulation function must be order-dependent for it
-    // to detect parallelism.
     // </editor-fold>
 
     
